@@ -38,3 +38,5 @@ out/
 
 application.yaml
 /src/main/resources/yaml
+/src/.DS_Store
+/src/main/.DS_Store
