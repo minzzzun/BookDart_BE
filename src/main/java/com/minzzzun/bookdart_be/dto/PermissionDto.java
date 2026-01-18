@@ -9,12 +9,12 @@ import java.util.List;
 public class PermissionDto {
 
     public static String[][] targets = {
-            {"permission","권한설정"}
+            {"templates/permission","권한설정"}
             , {"user","사용자"}
             , {"notice", "공지사항"}
             , {"faq", "FAQ"}
             , {"popup", "팝업"}
-            , {"board", "일반게시판"}
+            , {"post", "일반게시판"}
     };
 
     @NoArgsConstructor @AllArgsConstructor @SuperBuilder @Getter @Setter

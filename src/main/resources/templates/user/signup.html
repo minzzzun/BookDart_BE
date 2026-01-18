@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="ko">
+<th:block th:replace="~{includes/user/head}" />
+<style>
+    .claria-logo {
+        width: 100px;
+        height: 100px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto;
+    }
+    .font-logo {
+        font-size: 28px;
+        font-weight: 900;
+    }
+
+
+    .btn_nlogin {
+        background-color: #2B2D30;
+    }
+    .btn_nlogin:disabled {
+        background-color: #2F4D6F; /*  */
+        cursor: not-allowed;       /* 금지 커서 */
+        color: white;              /* 글자색 */
+    }
+    .btn_nlogin:hover {
+        opacity : 0.75;
+    }
+    .btn_login {
+        background-color: #2D35F8;
+    }
+    .btn_login:disabled {
+        background-color: #9ca3af; /* 회색 */
+        cursor: not-allowed;       /* 금지 커서 */
+        color: white;              /* 글자색 */
+    }
+    .btn_login:hover {
+        opacity : 0.75;
+    }
+</style>
+<body class="flex items-center min-h-screen">
+<div class="shadow-2xl items-center w-full max-w-md min-h-screen mx-auto">
+
+    <div class="space-y-6 mx-4">
+        <!-- 이메일 -->
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">아이디</label>
+            <input type="text" id="create_user_username" placeholder="아이디입력" class="w-full px-3 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+        </div>
+        <div class="div_after_ncode">
+            <label class="block text-sm font-medium text-gray-700 mb-1">비밀번호</label>
+            <input type="password" id="create_user_password" placeholder="비밀번호 입력" class="w-full px-3 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+        </div>
+        <div class="div_after_ncode">
+            <label class="block text-sm font-medium text-gray-700 mb-1">비밀번호 확인</label>
+            <input type="password" id="create_user_repassword" placeholder="비밀번호 입력" class="w-full px-3 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+        </div>
+    </div>
+    <!-- Bottom Navigation -->
+    <div class="max-w-md mx-auto absolute bottom-0 left-0 right-0 px-4 pb-8">
+
+        <button id="btn_confirm" class="w-full py-4 text-white btn_login font-semibold rounded-lg
+        hover:bg-blue-700 transition-all duration-300" onclick="signup_user()">
+            회원 가입
+        </button>
+    </div>
+</div>
+<th:block th:replace="~{includes/user/bottom}" />
+<script>
+    function signup_user(){
+        let username = $("#create_user_username").val();
+
+        let password = $("#create_user_password").val();
+        let repassword = $("#create_user_repassword").val();
+        if (password + "" === "" || password + "" === "null" || password + "" === "undefined") {
+            alert("비밀번호를 입력하세요.");
+            return false;
+        }
+        if(password !== repassword){
+            alert("비밀번호가 일치하지 않습니다.");
+            return false;
+        }
+
+        let _data = {};
+        _data["username"] = username;
+        _data["password"] = password;
+        $.ajax({
+            url: "/api/user/signup",
+            method: "POST",
+            contentType : 'application/json; charset=utf-8',
+            data: JSON.stringify(_data),
+            success: (data, status, xhr)=>{
+                alert(JSON.stringify(data));
+            },
+            error: (data, status, xhr)=>{
+                alert(JSON.stringify(data));
+            },
+        });
+    }
+
+</script>
+</body>
+</html>

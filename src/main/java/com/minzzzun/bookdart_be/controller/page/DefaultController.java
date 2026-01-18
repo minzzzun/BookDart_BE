@@ -11,7 +11,8 @@ public class DefaultController {
 
     @RequestMapping({"", "/"}) // @RequestMapping 의 주소값은 스트링 한개도 가능, 스트링 배열도 가능!
     public String empty(){
-        return "redirect:/index";
+//        return "redirect:/index";
+        return "index";
     }
 
     @RequestMapping("/{page}")

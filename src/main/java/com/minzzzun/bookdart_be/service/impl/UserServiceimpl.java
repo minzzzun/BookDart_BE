@@ -1,10 +1,12 @@
 package com.minzzzun.bookdart_be.service.impl;
 
+import com.minzzzun.bookdart_be.domain.Permissionuser;
 import com.minzzzun.bookdart_be.domain.User;
 import com.minzzzun.bookdart_be.dto.DefaultDto;
 import com.minzzzun.bookdart_be.dto.UserDto;
 import com.minzzzun.bookdart_be.exception.NoMatchingDataException;
 import com.minzzzun.bookdart_be.mapper.UserMapper;
+import com.minzzzun.bookdart_be.repository.PermissionuserRepository;
 import com.minzzzun.bookdart_be.repository.UserRepository;
 import com.minzzzun.bookdart_be.security.AuthService;
 import com.minzzzun.bookdart_be.service.PermittedService;
@@ -22,6 +24,7 @@ public class UserServiceimpl implements UserService {
     final UserRepository userRepository;
     final UserMapper userMapper;
     final PermittedService permittedService;
+    final PermissionuserRepository permissionuserRepository;
     final BCryptPasswordEncoder bCryptPasswordEncoder;
     final AuthService authService;
     final String target = "user";
@@ -29,7 +32,7 @@ public class UserServiceimpl implements UserService {
 
     @Override
     public DefaultDto.CreateResDto signup(UserDto.CreateReqDto param, Long reqUserId) {
-        return create(param, reqUserId);
+        return create(param, (long) -200);
     }
 
     @Override
@@ -40,6 +43,8 @@ public class UserServiceimpl implements UserService {
             throw new RuntimeException("already exists");
         }
         param.setPassword(bCryptPasswordEncoder.encode(param.getPassword()));
+
+
         return userRepository.save(param.toEntity()).toCreateResDto();
     }
 
