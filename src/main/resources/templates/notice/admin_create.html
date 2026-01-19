@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ko">
 
 <th:block th:replace="~{includes/admin/head}" />
 
@@ -27,30 +27,38 @@
 
                 <!-- Page Heading -->
                 <h1 class="h3 mb-2 text-gray-800">공지사항 생성</h1>
-                <p class="mb-4">신규 생성 입니다.</p>
+                <p class="mb-4">신규 공지사항을 작성합니다.</p>
 
                 <div class="mb-4">
                     <div class="form-group row">
 
                         <label class="col-sm-2 col-form-label">*제목</label>
+                        <div class="col-sm-6">
+                            <input type="text" class="input_param input_required form-control mb-2"
+                                   id="create_notice_title" name="title" placeholder="제목을 입력해주세요!" />
+                        </div>
+                        <label class="col-sm-4"></label>
+
+                        <label class="col-sm-2 col-form-label">*내용</label>
+                        <div class="col-sm-10">
+                            <textarea class="input_param input_required form-control mb-2"
+                                      id="create_notice_content" name="content"
+                                      rows="10" placeholder="내용을 입력해주세요!"></textarea>
+                        </div>
+
+                        <label class="col-sm-2 col-form-label">상단 고정</label>
                         <div class="col-sm-4">
-                            <input type="text" class="input_param input_required form-control mb-2" id="create_notice_title" name="title" placeholder="내용을 입력해주세요!" />
+                            <select class="input_param form-control mb-2" id="create_notice_pinned" name="pinned">
+                                <option value="false" selected>고정 안함</option>
+                                <option value="true">상단 고정</option>
+                            </select>
                         </div>
                         <label class="col-sm-6"></label>
 
-                        <label class="col-sm-2 col-form-label">내용</label>
-                        <div class="col-sm-10">
-                            <textarea class="input_param form-control mb-2" id="create_notice_content" name="content" placeholder="내용을 입력해주세요!" ></textarea>
-                        </div>
-
-                        <label class="col-sm-2 col-form-label">메인 사진</label>
-                        <div class="col-sm-10">
-                            <input type="file" class="form-control mb-2" id="create_notice_img" accept="image/*" placeholder="내용을 입력해주세요!" onchange="listenerSetImage(this, null)"/>
-                            <img class="hide" id="img_create_notice_img" style="height: 75px;" alt="메인 사진" />
-                        </div>
                     </div>
                 </div>
                 <button class="btn btn-primary" onclick="create_notice(); return false;">생성하기</button>
+                <a class="btn btn-secondary ml-2" href="/notice/admin_list">목록으로</a>
             </div>
             <!-- /.container-fluid -->
 
@@ -68,35 +76,45 @@
 <th:block th:replace="~{includes/admin/bottom}" />
 
 <script>
-    $( document ).ready(function() {
-        console.log( "ready!" );
+    $(document).ready(function() {
+        console.log("ready!");
     });
-    function create_notice(){
-        let _param = listenerCreateParam();
 
-        // 파일 담기
-        let tempFile = null;
-        let inputFile = document.getElementById('create_notice_img');
-        if (inputFile.files.length > 0) {
-            tempFile = inputFile.files[0];
+    function create_notice() {
+        // 필수 입력 체크
+        let title = $("#create_notice_title").val();
+        let content = $("#create_notice_content").val();
+
+        if (!title || title.trim() === '') {
+            alert("제목을 입력해주세요.");
+            $("#create_notice_title").focus();
+            return;
         }
-        // FormData 준비
-        let formData = new FormData();
-        formData.append('file', tempFile);   // URL 업로드는 추후 개발
-        formData.append('params', new Blob([JSON.stringify(_param)], {
-            type: "application/json; charset=utf-8"
-        }));
+        if (!content || content.trim() === '') {
+            alert("내용을 입력해주세요.");
+            $("#create_notice_content").focus();
+            return;
+        }
+
+        let _param = {
+            title: title,
+            content: content,
+            pinned: $("#create_notice_pinned").val() === "true"
+        };
 
         let _data = {
             url: "/api/notice",
-            type: "POST",
-            param: formData,
-            contentType: false,
-            success: function(data){
-                alert("등록 성공");
-                location.reload();
+            beforeSend : function(xhr){
+                let accessToken = localStorage.getItem("accessToken");
+                xhr.setRequestHeader("Authorization", accessToken);
             },
-            error: function(){
+            type: "POST",
+            param: _param,
+            success: function(data) {
+                alert("공지사항이 등록되었습니다.");
+                location.href = "/notice/admin_list";
+            },
+            error: function() {
                 alert("정상적으로 이루어지지 않았습니다. 다시 시도해주세요.");
             }
         };
@@ -104,7 +122,5 @@
     }
 </script>
 
-
 </body>
-
 </html>

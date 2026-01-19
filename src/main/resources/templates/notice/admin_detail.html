@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ko">
 
 <th:block th:replace="~{includes/admin/head}" />
 
@@ -26,43 +26,56 @@
             <div class="container-fluid">
 
                 <!-- Page Heading -->
-                <h1 class="h3 mb-2 text-gray-800">공지사항 : <span class="font_notice_title">-</span> </h1>
-                <p class="mb-4">공지사항 상세 입니다.</p>
+                <h1 class="h3 mb-2 text-gray-800">공지사항 상세</h1>
+                <p class="mb-4">공지사항 상세 정보입니다.</p>
 
                 <div class="mb-4">
                     <div class="form-group row">
                         <input type="hidden" id="detail_notice_id" />
 
-                        <label class="col-sm-2 col-form-label">*삭제여부</label>
+                        <label class="col-sm-2 col-form-label">삭제여부</label>
                         <div class="col-sm-4">
-                            <select class="input_param input_required form-control mb-2" id="detail_notice_deleted" name="deleted" onchange="update_notice(this)">
-                                <option value="" selected="selected">전체</option>
+                            <select class="input_param form-control mb-2" id="detail_notice_deleted" name="deleted" onchange="update_notice(this)">
                                 <option value="false">일반</option>
                                 <option value="true">삭제</option>
                             </select>
                         </div>
                         <label class="col-sm-6"></label>
+
                         <label class="col-sm-2 col-form-label">*제목</label>
+                        <div class="col-sm-6">
+                            <input type="text" class="input_param input_required form-control mb-2"
+                                   id="detail_notice_title" name="title"
+                                   placeholder="제목을 입력해주세요!" onchange="update_notice(this)" />
+                        </div>
+                        <label class="col-sm-4"></label>
+
+                        <label class="col-sm-2 col-form-label">*내용</label>
+                        <div class="col-sm-10">
+                            <textarea class="input_param input_required form-control mb-2"
+                                      id="detail_notice_content" name="content"
+                                      rows="10" placeholder="내용을 입력해주세요!"
+                                      onchange="update_notice(this)"></textarea>
+                        </div>
+
+                        <label class="col-sm-2 col-form-label">상단 고정</label>
                         <div class="col-sm-4">
-                            <input type="text" class="input_param input_required form-control mb-2" id="detail_notice_title" name="title" placeholder="제목을 입력해주세요!" onchange="update_notice(this)" />
+                            <select class="input_param form-control mb-2" id="detail_notice_pinned" name="pinned" onchange="update_notice(this)">
+                                <option value="false">고정 안함</option>
+                                <option value="true">상단 고정</option>
+                            </select>
                         </div>
                         <label class="col-sm-6"></label>
 
-                        <label class="col-sm-2 col-form-label">내용</label>
-                        <div class="col-sm-10">
-                            <textarea class="input_param form-control mb-2" id="detail_notice_content" name="content" placeholder="내용을 입력해주세요!" onchange="update_notice(this)" ></textarea>
+                        <label class="col-sm-2 col-form-label">작성일</label>
+                        <div class="col-sm-4">
+                            <input type="text" class="form-control mb-2" id="detail_notice_createdAt" readonly />
                         </div>
-
-                        <label class="col-sm-2 col-form-label">메인 사진</label>
-                        <div class="col-sm-10">
-                            <input type="text" class="input_param form-control mb-2" id="detail_notice_img" name="img" placeholder="제목을 입력해주세요!" onchange="update_notice(this)" />
-                            <input type="file" class="form-control mb-2" id="notice_img" accept="image/*" placeholder="내용을 입력해주세요!" onchange="listenerSetImage(this, listener_upload_img)"/>
-                            <img class="hide" id="img_notice_img" style="height: 75px;" alt="메인 사진" />
-                        </div>
+                        <label class="col-sm-6"></label>
 
                     </div>
-
                 </div>
+                <a class="btn btn-secondary" href="/notice/admin_list">목록으로</a>
             </div>
             <!-- /.container-fluid -->
 
@@ -84,66 +97,66 @@
         console.log("ready!");
         detail_notice();
     });
-    function listener_upload_img() {
-        // 파일 담기
-        let tempFile = null;
-        let inputFile = document.getElementById('notice_img');
-        if (inputFile.files.length > 0) {
-            tempFile = inputFile.files[0];
-        }
-        let fileData = new FormData();
-        fileData.append("file", tempFile);
-        $.ajax({
-            url: "/api/default/uploadFile",
-            type: "POST",
-            data: fileData ,
-            cache : false,
-            contentType : false,
-            processData : false,
-            success: (data, status, xhr)=>{
-                $("#detail_notice_img").val("/image/" + data);
-                update_notice("#detail_notice_img");
-            },
-            error: (data)=>{
-                alert("error")
-            },
-        });
 
-    }
-    function update_notice(obj_this){
+    function update_notice(obj_this) {
         let _param = {
-            id : getIdFromUrl(null)
+            id: getIdFromUrl(null)
         };
-        _param[$(obj_this).attr("name")] = $(obj_this).val();
-        let _data = {};
-        _data.url = "/api/notice";
-        _data.type = "PUT";
-        _data.param = _param;
-        _data.success = function(obj_data, obj_status, obj_xhr){
+
+        let fieldName = $(obj_this).attr("name");
+        let fieldValue = $(obj_this).val();
+
+        // boolean 값 변환
+        if (fieldName === "deleted" || fieldName === "pinned") {
+            _param[fieldName] = fieldValue === "true";
+        } else {
+            _param[fieldName] = fieldValue;
         }
-        _data.error = function(obj_data, obj_status, obj_xhr){
-            alert("정상적으로 이루어지지 않았습니다. 다시 시도해주세요.");
-        }
+
+        let _data = {
+            url: "/api/notice",
+            beforeSend: function(xhr) {
+                let accessToken = localStorage.getItem("accessToken");
+                xhr.setRequestHeader("Authorization", accessToken);
+            },
+            type: "PUT",
+            param: _param,
+            success: function(obj_data, obj_status, obj_xhr) {
+                // 성공 시 조용히 처리
+            },
+            error: function(obj_data, obj_status, obj_xhr) {
+                alert("정상적으로 이루어지지 않았습니다. 다시 시도해주세요.");
+            }
+        };
         func_ajax(_data);
     }
+
     function detail_notice() {
         let noticeId = getIdFromUrl(null);
-        let _data = new Map();
-        _data.url = "/api/notice";
-        _data.type = "GET";
-        _data.param = {'id': noticeId};
-        _data.success = function (obj_data, obj_status, obj_xhr) {
-            //alert(JSON.stringify(obj_data));
-            listenerAfterDetail(obj_data, "notice");
-        }
-        _data.error = function (obj_data, obj_status, obj_xhr) {
-            alert("정상적으로 이루어지지 않았습니다. 다시 시도해주세요.");
-        }
+        let _data = {
+            url: "/api/notice",
+            beforeSend: function(xhr) {
+                let accessToken = localStorage.getItem("accessToken");
+                xhr.setRequestHeader("Authorization", accessToken);
+            },
+            type: "GET",
+            param: {'id': noticeId},
+            success: function(obj_data, obj_status, obj_xhr) {
+                // 데이터 바인딩
+                $("#detail_notice_id").val(obj_data.id);
+                $("#detail_notice_title").val(obj_data.title);
+                $("#detail_notice_content").val(obj_data.content);
+                $("#detail_notice_deleted").val(String(obj_data.deleted));
+                $("#detail_notice_pinned").val(String(obj_data.pinned));
+                $("#detail_notice_createdAt").val(obj_data.createdAt);
+            },
+            error: function(obj_data, obj_status, obj_xhr) {
+                alert("정상적으로 이루어지지 않았습니다. 다시 시도해주세요.");
+            }
+        };
         func_ajax(_data);
     }
 </script>
 
-
 </body>
-
 </html>

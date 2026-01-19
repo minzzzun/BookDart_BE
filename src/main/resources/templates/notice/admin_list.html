@@ -1,14 +1,16 @@
 <!DOCTYPE html>
 <html lang="ko">
-<th:block th:replace="~{includes/user/head}" />
-<link rel="stylesheet" href="/frontswcenter/css/aside.css">
-<body>
+
+<th:block th:replace="~{includes/admin/head}" />
+
+<body id="page-top">
 
 <script id="list_info_notice" type="text/x-handlebars-template">
     {{#resultData_notice}}
     <tr class="gradeA">
-        <td><font class="font_notice_order"></font></td>
-        <td class="cursor_pointer" onclick="location.href='/notice/detail/{{id}}';">{{title}}</td>
+        <td>{{id}}</td>
+        <td class="cursor_pointer" onclick="location.href='/notice/admin_detail/{{id}}';">{{title}}</td>
+        <td>{{#if pinned}}<span class="badge badge-primary">고정</span>{{/if}}</td>
         <td>{{createdAt}}
             <input type="hidden" class="input_cursor_notice_id" value="{{id}}"/>
         </td>
@@ -20,77 +22,124 @@
     var list_info_notice_template = Handlebars.compile(list_info_notice);
 </script>
 
-<th:block th:replace="~{includes/user/header}" />
+<!-- Page Wrapper -->
+<div id="wrapper">
 
-<div class="page-layout">
-    <th:block th:replace="~{includes/user/aside}" />
-    <script> listener_aside_nav_active("news", 1); </script>
+    <th:block th:replace="~{includes/admin/sidebar}" />
+    <script>
+        $(".nav_notice_a").removeClass("collapsed");
+        $(".nav_notice_div").addClass("show");
+    </script>
 
+    <!-- Content Wrapper -->
+    <div id="content-wrapper" class="d-flex flex-column">
 
-    <main class="content-area">
-        <h1 class="page-title">공지사항</h1>
+        <!-- Main Content -->
+        <div id="content">
 
-        <div class="content-box">
-            <table class="table table-bordered bg-white" id="dataTable">
-                <thead>
-                <tr>
-                    <th>#</th>
-                    <th>제목</th>
-                    <th>입력일시</th>
-                </tr>
-                </thead>
-                <tbody id="tbody_notice_list">
-                </tbody>
-            </table>
+            <th:block th:replace="~{includes/admin/topbar}" />
+
+            <!-- Begin Page Content -->
+            <div class="container-fluid">
+
+                <!-- Page Heading -->
+                <h1 class="h3 mb-2 text-gray-800">공지사항 목록</h1>
+                <p class="mb-4">등록된 공지사항 목록입니다.</p>
+
+                <!-- 생성 버튼 -->
+                <div class="mb-3">
+                    <a class="btn btn-primary" href="/notice/admin_create">
+                        <i class="fas fa-plus"></i> 공지사항 작성
+                    </a>
+                </div>
+
+                <div class="card shadow mb-4">
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+                                <thead>
+                                <tr>
+                                    <th style="width: 60px;">#</th>
+                                    <th>제목</th>
+                                    <th style="width: 80px;">고정</th>
+                                    <th style="width: 180px;">작성일</th>
+                                </tr>
+                                </thead>
+                                <tbody id="tbody_notice_list">
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- 더보기 버튼 -->
+                        <div class="text-center mt-3">
+                            <button class="btn btn-secondary" id="btn_load_more" onclick="search_notice()">더보기</button>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+            <!-- /.container-fluid -->
+
         </div>
+        <!-- End of Main Content -->
 
-    </main>
+        <th:block th:replace="~{includes/admin/footer}" />
+
+    </div>
+    <!-- End of Content Wrapper -->
 
 </div>
+<!-- End of Page Wrapper -->
 
-<th:block th:replace="~{includes/user/footer}" />
-<th:block th:replace="~{includes/user/bottom}" />
+<th:block th:replace="~{includes/admin/bottom}" />
 
 <script>
-    $(function(){
-        console.log( "ready!" );
+    $(function() {
+        console.log("ready!");
         search_notice();
     });
-    function listener_notice_keyword_changed(){
-        $("#input_notice_keyword_changed").val("1");
-        $("#tbody_notice_list").html("");
-        search_notice();
-    }
+
     function search_notice() {
-        let _data = new Map();
-        _data.url = "/api/notice/scrollList";
-        _data.type = "GET";
-        _data.param = {
-            perpage: 10
-            , orderby: "id"
-            , orderway: "DESC"
-            , cursor: listenerGetCursor("notice")
-            , deleted: false
-        };
-        _data.success = function (obj_data, obj_status, obj_xhr) {
-            /*let input_notice_keyword_changed = $("#input_notice_keyword_changed").val();
-            if(input_notice_keyword_changed === "1"){
-                $("#input_notice_keyword_changed").val("");
-            }*/
-            let tempList = obj_data;
-            for (let each of tempList) {
-                let tList = [];
-                tList.push(each);
-                $("#tbody_notice_list").append(list_info_notice_template({"resultData_notice": tList}));
+        let _data = {
+            url: "/api/notice/scrollList",
+            beforeSend: function(xhr) {
+                let accessToken = localStorage.getItem("accessToken");
+                xhr.setRequestHeader("Authorization", accessToken);
+            },
+            type: "GET",
+            param: {
+                perpage: 10,
+                orderby: "id",
+                orderway: "DESC",
+                cursor: listenerGetCursor("notice"),
+                deleted: false
+            },
+            success: function(obj_data, obj_status, obj_xhr) {
+                let tempList = obj_data;
+
+                if (tempList.length === 0) {
+                    $("#btn_load_more").hide();
+                    return;
+                }
+
+                for (let each of tempList) {
+                    let tList = [];
+                    tList.push(each);
+                    $("#tbody_notice_list").append(list_info_notice_template({"resultData_notice": tList}));
+                }
+                listenerAfterScrollList("notice");
+
+                if (tempList.length < 10) {
+                    $("#btn_load_more").hide();
+                }
+            },
+            error: function(obj_data, obj_status, obj_xhr) {
+                alert("정상적으로 이루어지지 않았습니다. 다시 시도해주세요.");
             }
-            listenerAfterScrollList("notice");
-        }
-        _data.error = function (obj_data, obj_status, obj_xhr) {
-            alert("정상적으로 이루어지지 않았습니다. 다시 시도해주세요.");
-        }
+        };
         func_ajax(_data);
     }
 </script>
-</body>
 
+</body>
 </html>
