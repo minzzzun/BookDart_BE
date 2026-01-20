@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0/EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.minzzzun.bookdart_be.mapper.LikeMapper">
+
+    <select id="detail" parameterType="hashMap" resultType="com.minzzzun.bookdart_be.dto.LikeDto$DetailResDto">
+        SELECT likes.id
+             , likes.deleted
+             , likes.created_at as createdAt
+             , likes.modified_at as modifiedAt
+             , likes.post_id as postId
+             , likes.user_id as userId
+        FROM `like` likes
+        WHERE likes.id = #{id}
+    </select>
+
+    <sql id="commonWhere">
+        WHERE likes.id is not NULL
+        <if test="deleted != null">AND likes.deleted = #{deleted}</if>
+        <if test="postId != null">AND likes.post_id = #{postId}</if>
+        <if test="userId != null">AND likes.user_id = #{userId}</if>
+    </sql>
+
+    <select id="listByPost" parameterType="hashMap" resultType="com.minzzzun.bookdart_be.dto.LikeDto$DetailResDto">
+        SELECT likes.id
+             , likes.deleted
+             , likes.created_at as createdAt
+             , likes.modified_at as modifiedAt
+             , likes.post_id as postId
+             , likes.user_id as userId
+        FROM `like` likes
+        WHERE likes.post_id = #{postId}
+          AND likes.deleted = false
+        ORDER BY likes.created_at DESC
+    </select>
+
+    <select id="countByPost" parameterType="Long" resultType="Long">
+        SELECT COUNT(*)
+        FROM `like` likes
+        WHERE likes.post_id = #{postId}
+          AND likes.deleted = false
+    </select>
+
+    <select id="pagedListCount" parameterType="hashMap" resultType="Integer">
+        SELECT count(likes.id) as listsize
+        FROM `like` likes
+        <include refid="commonWhere"/>
+    </select>
+
+    <select id="pagedList" parameterType="hashMap" resultType="com.minzzzun.bookdart_be.dto.LikeDto$DetailResDto">
+        SELECT likes.id
+        FROM `like` likes
+        <include refid="commonWhere"/>
+        <if test="orderby != null and orderby == 'id'">ORDER BY likes.id</if>
+        <if test="orderway != null and orderway == 'DESC'"> DESC</if>
+        <if test="orderway != null and orderway == 'ASC'"> ASC</if>
+        LIMIT #{offset}, #{perpage}
+    </select>
+
+</mapper>
