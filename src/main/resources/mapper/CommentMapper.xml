@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0/EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.minzzzun.bookdart_be.mapper.CommentMapper">
+
+    <!---->
+    <select id="detail" parameterType="hashMap" resultType="com.minzzzun.bookdart_be.dto.CommentDto$DetailResDto">
+        SELECT comment.id
+             , comment.deleted
+             , comment.created_at as createdAt
+             , comment.modified_at as modifiedAt
+             , comment.post_id as postId
+             , comment.user_id as userId
+             , comment.content
+             , comment.username as username
+        FROM comment
+        LEFT JOIN user ON comment.user_id = user.id
+        WHERE comment.id = #{id}
+    </select>
+
+    <!-- 공통 WHERE 절 -->
+    <sql id="commonWhere">
+        WHERE comment.id is not NULL
+        <if test = "deleted != null">AND comment.deleted = #{deleted}</if>
+        <if test = "postId != null">AND comment.post_id = #{postId}</if>
+        <if test="sdate != null and sdate != ''">
+            AND comment.created_at >= CONCAT(#{sdate}, ' 00:00:00')
+        </if>
+        <if test="fdate != null and fdate != ''">
+            AND CONCAT(#{fdate}, ' 23:59:59') >= comment.created_at
+        </if>
+    </sql>
+
+    <select id="list" parameterType="hashMap" resultType="com.minzzzun.bookdart_be.dto.CommentDto$DetailResDto">
+        SELECT comment.id
+            ,comment.deleted
+            ,comment.created_at as createdAt
+            ,comment.modified_at as modifiedAt
+            ,comment.post_id as postId
+            ,comment.user_id as userId
+            ,comment.content
+            ,user.username as username
+        FROM comment
+        LEFT JOIN user ON comment.user_id = user.id
+        <include refid="commonWhere"/>
+        ORDER BY comment.created_at ASC
+    </select>
+
+
+    <select id="pagedList" parameterType="hashMap"
+            resultType="com.minzzzun.bookdart_be.dto.CommentDto$DetailResDto">
+        SELECT
+        comment.id,
+        comment.deleted,
+        comment.created_at as createdAt,
+        comment.modified_at as modifiedAt,
+        comment.post_id as postId,
+        comment.user_id as userId,
+        comment.content,
+        user.username as username
+        FROM comment
+        LEFT JOIN user ON comment.user_id = user.id
+        <include refid="commonWhere"/>
+        <if test="orderby != null and orderby == 'id'">ORDER BY comment.id</if>
+        <if test="orderby != null and orderby == 'createdAt'">ORDER BY comment.created_at</if>
+        <if test="orderway != null and orderway == 'DESC'"> DESC</if>
+        <if test="orderway != null and orderway == 'ASC'"> ASC</if>
+        LIMIT #{offset}, #{perpage}
+    </select>
+    <select id="pagedListCount" parameterType="hashMap" resultType="Integer">
+        SELECT COUNT(*)
+        FROM comment
+        <include refid="commonWhere"/>
+    </select>
+    <select id="scrollList" parameterType="hashMap"
+            resultType="com.minzzzun.bookdart_be.dto.CommentDto$DetailResDto">
+        SELECT
+        comment.id,
+        comment.deleted,
+        comment.created_at as createdAt,
+        comment.modified_at as modifiedAt,
+        comment.post_id as postId,
+        comment.user_id as userId,
+        comment.content,
+        user.username as username
+        FROM comment
+        LEFT JOIN user ON comment.user_id = user.id
+        <include refid="commonWhere"/>
+        <if test="mark != null and mark > 0">
+            <if test="orderway != null and orderway == 'DESC'">
+                AND comment.id &lt; #{mark}
+            </if>
+            <if test="orderway == null or orderway == 'ASC'">
+                AND comment.id &gt; #{mark}
+            </if>
+        </if>
+        <if test="orderby != null and orderby == 'id'">ORDER BY comment.id</if>
+        <if test="orderby != null and orderby == 'createdAt'">ORDER BY comment.created_at</if>
+        <if test="orderway != null and orderway == 'DESC'"> DESC</if>
+        <if test="orderway == null or orderway == 'ASC'"> ASC</if>
+        LIMIT #{perpage}
+    </select>
+</mapper>

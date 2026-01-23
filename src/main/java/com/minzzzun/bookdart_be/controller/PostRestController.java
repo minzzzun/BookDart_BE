@@ -28,7 +28,6 @@ public class PostRestController {
         return principalDetails.getUser().getId();
     }
 
-
     @PreAuthorize("hasRole('USER')")
     @PostMapping("")
     public ResponseEntity<DefaultDto.CreateResDto> create(@RequestBody PostDto.CreateReqDto param, @AuthenticationPrincipal PrincipalDetails principalDetails){
